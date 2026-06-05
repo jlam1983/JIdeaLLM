@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JIdeaLLM - Node Flow Editor</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <h1>JIdeaLLM</h1>
+      <nav class="nav">
+        <button class="nav-btn active" data-view="runtime">Runtime</button>
+        <button class="nav-btn" data-view="flow-panel">Flow Panel</button>
+        <button class="nav-btn" data-view="template-crud">Templates</button>
+        <button class="nav-btn" data-view="memory">Memory</button>
+        <button class="nav-btn" data-view="content">Content</button>
+      </nav>
+      <div class="status">
+        <select id="provider-select" class="provider-select">
+          <option value="anthropic">Anthropic</option>
+          <option value="ollama">Ollama</option>
+          <option value="minimax">MiniMax</option>
+          <option value="poe">Poe</option>
+        </select>
+        <span class="status-indicator"></span>
+        <span id="worker-status">Worker: 0/4</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Runtime View -->
+      <section id="runtime-view" class="view active">
+        <div class="panel">
+          <h2>Runtime Mode</h2>
+
+          <div class="form-group">
+            <label>Select Flow:</label>
+            <select id="runtime-flow-select">
+              <option value="">-- Select Flow --</option>
+            </select>
+            <button id="load-flow-btn">Load</button>
+          </div>
+
+          <div class="panel-section">
+            <h3>Case Management</h3>
+            <div class="case-list" id="case-list"></div>
+            <div class="case-actions">
+              <button id="new-case-btn" class="btn btn-primary">New Case</button>
+              <button id="edit-case-btn" class="btn">Edit</button>
+              <button id="delete-case-btn" class="btn btn-danger">Delete</button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <h3>Chat Interface</h3>
+            <div class="chat-container">
+              <div class="chat-history" id="chat-history">
+                <div class="chat-placeholder">Select a flow and case to start chatting</div>
+              </div>
+              <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Type your message..." disabled>
+                <button id="send-btn" disabled>Send</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="export-actions">
+            <button id="export-chat-btn" class="btn" disabled>Export Chat</button>
+            <button id="export-summary-btn" class="btn" disabled>Export Summary</button>
+            <button id="export-snapshot-btn" class="btn" disabled>Export Snapshot</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Flow Panel View -->
+      <section id="flow-panel-view" class="view">
+        <div class="flow-panel-layout">
+          <div class="flow-list-panel">
+            <h3>Flows</h3>
+            <div class="flow-list" id="flow-list"></div>
+            <div class="flow-actions">
+              <button id="new-flow-btn" class="btn btn-primary">+ New Flow</button>
+              <button id="delete-flow-btn" class="btn btn-danger">Delete</button>
+              <button id="export-flow-btn" class="btn">Export</button>
+              <button id="import-flow-btn" class="btn">Import</button>
+            </div>
+          </div>
+
+          <div class="canvas-panel">
+            <div class="canvas-toolbar">
+              <span id="current-flow-name">No flow selected</span>
+              <button id="save-flow-btn" class="btn btn-primary" disabled>Save</button>
+            </div>
+            <div class="node-canvas" id="node-canvas">
+              <div class="canvas-placeholder">Select or create a flow to edit</div>
+            </div>
+          </div>
+
+          <div class="node-palette-panel">
+            <h3>Node Palette</h3>
+            <div class="node-palette" id="node-palette">
+              <div class="palette-item" data-node-type="phenomenon">📥 現象體</div>
+              <div class="palette-item" data-node-type="knowledge">📚 知識節點</div>
+              <div class="palette-item" data-node-type="evaluation">⚖️ 評估體</div>
+              <div class="palette-item" data-node-type="central">⭐ 中心類</div>
+              <div class="palette-item" data-node-type="programming">📜 程序編寫</div>
+              <div class="palette-item" data-node-type="suggestion">💡 建議體</div>
+              <div class="palette-item" data-node-type="correction">🔧 修改體</div>
+              <div class="palette-item" data-node-type="standard">📋 規範類</div>
+            </div>
+          </div>
+
+          <div class="node-properties-panel">
+            <h3>Node Properties</h3>
+            <div id="node-properties">
+              <div class="placeholder">Select a node to edit properties</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Template CRUD View -->
+      <section id="template-crud-view" class="view">
+        <div class="template-crud-layout">
+          <div class="template-list-panel">
+            <h3>Templates</h3>
+            <div class="template-list" id="template-list"></div>
+            <div class="template-actions">
+              <button id="new-template-btn" class="btn btn-primary">+ New Template</button>
+              <button id="delete-template-btn" class="btn btn-danger">Delete</button>
+              <button id="duplicate-template-btn" class="btn">Duplicate</button>
+            </div>
+          </div>
+
+          <div class="template-editor-panel">
+            <h3>Template Editor</h3>
+            <div id="template-editor">
+              <div class="placeholder">Select a template to edit</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Memory View (RAG) -->
+      <section id="memory-view" class="view">
+        <div class="panel">
+          <h2>Memory (RAG)</h2>
+
+          <div class="panel-section">
+            <h3>Search Memory</h3>
+            <div class="search-box">
+              <input type="text" id="memory-search-input" placeholder="Search memories...">
+              <button id="memory-search-btn" class="btn btn-primary">Search</button>
+            </div>
+            <div id="memory-search-results" class="memory-results"></div>
+          </div>
+
+          <div class="panel-section">
+            <h3>Add New Memory</h3>
+            <div class="form-group">
+              <textarea id="memory-content-input" placeholder="Enter memory content..."></textarea>
+            </div>
+            <div class="form-group">
+              <input type="text" id="memory-tags-input" placeholder="Tags (comma separated)">
+            </div>
+            <button id="add-memory-btn" class="btn btn-primary">Add Memory</button>
+          </div>
+
+          <div class="panel-section">
+            <h3>All Memories</h3>
+            <div id="all-memories" class="memory-list"></div>
+          </div>
+
+          <div class="panel-section">
+            <h3>Memory Actions</h3>
+            <div class="memory-actions">
+              <button id="export-memories-btn" class="btn">Export All</button>
+              <button id="import-memories-btn" class="btn">Import</button>
+              <button id="clear-memories-btn" class="btn btn-danger">Clear All</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Content Management View -->
+      <section id="content-view" class="view">
+        <div class="panel">
+          <h2>Windows Content Manager</h2>
+
+          <div class="panel-section">
+            <h3>Current Path: <span id="current-content-path">-</span></h3>
+            <div class="content-toolbar">
+              <input type="text" id="content-path-input" placeholder="Enter path...">
+              <button id="content-go-btn" class="btn btn-primary">Go</button>
+              <button id="content-refresh-btn" class="btn">Refresh</button>
+            </div>
+            <div id="content-list" class="content-list"></div>
+          </div>
+
+          <div class="panel-section">
+            <h3>File Operations</h3>
+            <div class="content-actions">
+              <button id="content-new-file-btn" class="btn btn-primary">New File</button>
+              <button id="content-new-folder-btn" class="btn btn-primary">New Folder</button>
+              <button id="content-upload-btn" class="btn">Upload</button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <h3>Content Path Settings</h3>
+            <div class="form-group">
+              <label>Base Path:</label>
+              <input type="text" id="content-base-path" placeholder="C:/Users/...">
+              <button id="content-set-base-btn" class="btn">Set Base Path</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+      <div class="modal" id="modal-content"></div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
