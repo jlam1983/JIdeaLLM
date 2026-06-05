@@ -16,7 +16,7 @@ Then open `http://localhost:3000`
 
 ## Features
 
-- 🎨 Visual node-based flow editor (ComfyUI/n8n style)
+- 🎨 Visual node-based flow editor
 - 🤖 Multi-provider LLM support (Anthropic, Ollama, MiniMax, Poe)
 - 🧠 Memory system with RAG-like search
 - 📁 Windows content management
